@@ -17,6 +17,7 @@ mod identity;
 pub mod kzg_point_evaluation;
 mod modexp;
 mod secp256k1;
+mod secp256r1;
 pub mod utilities;
 
 use alloc::{boxed::Box, collections::BTreeMap, vec::Vec};
@@ -116,6 +117,7 @@ pub enum SpecId {
     ISTANBUL,
     BERLIN,
     CANCUN,
+    FJORD,
     LATEST,
 }
 
@@ -131,6 +133,7 @@ impl SpecId {
             ISTANBUL | MUIR_GLACIER => Self::ISTANBUL,
             BERLIN | LONDON | ARROW_GLACIER | GRAY_GLACIER | MERGE | SHANGHAI => Self::BERLIN,
             CANCUN => Self::CANCUN,
+            FJORD => Self::FJORD,
             LATEST => Self::LATEST,
             #[cfg(feature = "optimism")]
             BEDROCK | REGOLITH | CANYON => Self::BERLIN,
@@ -198,6 +201,7 @@ impl Precompiles {
                 // EIP-2565: ModExp Gas Cost.
                 modexp::BERLIN,
             ]);
+            precompiles.extend([secp256r1::P256VERIFY]);
             Box::new(precompiles)
         })
     }
@@ -225,9 +229,21 @@ impl Precompiles {
         })
     }
 
+    pub fn fjord() -> &'static Self {
+        static INSTANCE: OnceBox<Precompiles> = OnceBox::new();
+        INSTANCE.get_or_init(|| {
+            let mut precompiles = Self::cancun().clone();
+
+            precompiles.extend([
+                secp256r1::P256VERIFY,
+            ]);
+            Box::new(precompiles)
+        })
+    }
+
     /// Returns the precompiles for the latest spec.
     pub fn latest() -> &'static Self {
-        Self::cancun()
+        Self::fjord()
     }
 
     /// Returns the precompiles for the given spec.
@@ -238,6 +254,7 @@ impl Precompiles {
             SpecId::ISTANBUL => Self::istanbul(),
             SpecId::BERLIN => Self::berlin(),
             SpecId::CANCUN => Self::cancun(),
+            SpecId::FJORD => Self::fjord(),
             SpecId::LATEST => Self::latest(),
         }
     }

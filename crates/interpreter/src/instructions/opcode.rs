@@ -907,6 +907,7 @@ pub const fn spec_opcode_gas(spec_id: SpecId) -> &'static [OpInfo; 256] {
         MERGE,
         SHANGHAI,
         CANCUN,
+        FJORD,
         LATEST,
     )
 }
